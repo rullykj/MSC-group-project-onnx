@@ -1,0 +1,10 @@
+version: "3.0"
+
+services:
+
+  app:
+    build: .
+    image: age_gender_prediction_onnx
+    ports:
+      - "8002:8000"
+    restart: always
