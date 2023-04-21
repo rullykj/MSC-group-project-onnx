@@ -207,6 +207,8 @@ def predict_api(myImageBytes):
         preds = MyOnnxModelSession.run(output_layer_names, {"input_5": face_img.astype(np.float32)})
 
         return preds, json_colors
+    else:
+        return [], json_colors
 
 @app.get("/")
 async def hello_world(request):
@@ -224,18 +226,20 @@ def post_json(request):
     # check the file type of uploaded file. Throw an error if filetype is not image
     if test_file.type.split('/')[0]!='image':
         return json({
-            "error": "The uploaded file is not an image"
-        }, status=422)
+            "error": True,
+            "message": "The uploaded file is not an image"
+        })
 
     preds, json_colors = predict_api(test_file.body)
-    # print(preds)
+    
+    if not preds:
+        return json({
+            "error": True,
+            "message": "Could not detect face in the image"
+        })
+    
     preds_ages = preds[0][0]
     preds_genders = preds[1][0]
-    age_index = np.argmax(preds_ages)
-    gender_index = np.argmax(preds_genders)
-
-    print("Gender:", gender_labels[gender_index])
-    print("Age:", age_labels[age_index])
 
     json_object_ages = obj_to_json_obj(preds_ages, NumpyArrayEncoder)
     json_object_genders = obj_to_json_obj(preds_genders, NumpyArrayEncoder)
@@ -244,6 +248,7 @@ def post_json(request):
  
     
     return json({ 
+        "error": False,
         "received": True, 
         "file_name": test_file.name, 
         "file_type": test_file.type, 
