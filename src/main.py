@@ -221,6 +221,12 @@ async def predict(request):
 def post_json(request):
     test_file = request.files.get('test')
 
+    # check the file type of uploaded file. Throw an error if filetype is not image
+    if test_file.type.split('/')[0]!='image':
+        return json({
+            "error": "The uploaded file is not an image"
+        }, status=422)
+
     preds, json_colors = predict_api(test_file.body)
     # print(preds)
     preds_ages = preds[0][0]
